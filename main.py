@@ -45,35 +45,37 @@ def find_new_set(sets_elements_can_be, A_T, elements_weight, capacidades, select
 def define_new_elements_covered_by_set(set_elements, already_covered_elements):
     return np.array([1 if set_elements[i] == 1 or already_covered_elements[i] == 1 else 0 for i in range(set_elements.shape[0])])
 
+def stringVetor(vetor):
+        saida = ""
+        saida +="{}".format(vetor[0])
+        for i in range(1,vetor.shape[0]):
+            saida +=" {}".format(vetor[i])
+        return saida
+
 def main():
     capacidades,matriz_incidencia=leEntrada()
-    #print("Capacidades: \n{}".format(capacidades))
-    #print("Matriz Incidencia: \n{}".format(matriz_incidencia))
-    #print("A_T:\n{}".format)
 
     A_T = matriz_incidencia.T
-    #print("A_T:\n{}".format(A_T))
-    elements_weight = np.zeros(matriz_incidencia.shape[0])  
-    selected_sets = np.zeros(matriz_incidencia.shape[1])
+    elements_weight = np.zeros(matriz_incidencia.shape[0], dtype = np.int32)  
+    selected_sets = np.zeros(matriz_incidencia.shape[1], dtype = np.int8)
     already_covered_elements = np.zeros(matriz_incidencia.shape[0])
 
     while True:
         index_elem_not_covered = get_not_covered_element_index(already_covered_elements)
         if element_is_not_covered(index_elem_not_covered):
-            print("Elemento fora de qualquer conjunto: {}".format(index_elem_not_covered))
             sets_elements_can_be = A_T[:,index_elem_not_covered]
             lines_of_sets_element_can_be = np.array([A_T[i] for i in range(A_T.shape[0]) if sets_elements_can_be[i] == 1])
             element_max_weight = get_max_weight_possible_of(sets_elements_can_be, elements_weight, A_T, capacidades)
             elements_weight[index_elem_not_covered] = element_max_weight
-            print("Pesos atuais: {}".format(elements_weight))
             new_set_found_index = find_new_set(sets_elements_can_be, A_T, elements_weight, capacidades, selected_sets)
             if new_set_found_index != -1:
+                selected_sets[new_set_found_index] = 1
                 set_elements = A_T[new_set_found_index]
                 already_covered_elements = define_new_elements_covered_by_set(set_elements, already_covered_elements)
-                print(already_covered_elements)
-            break
         else:
             break
+    print(stringVetor(selected_sets))
+    print(stringVetor(elements_weight))
     
 if __name__ == '__main__':
     main()
