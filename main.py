@@ -23,25 +23,27 @@ def get_not_covered_element_index(elements_weight):
 def element_is_not_covered(element_index):
     return element_index != -1
 
-def get_max_weight_possible_of(index_elem, elements_weight, A_T, capacidades):
-    sets_elements_can_be = A_T[:,index_elem]
-    lines_of_sets_element_can_be = np.array([A_T[i] for i in range(A_T.shape[0]) if sets_elements_can_be[i] == 1])
-    #print("sets_elements_can_be: {}".format(sets_elements_can_be))
-    #print("Linhas Conjuntos que o elemento esta presente\n {}".format(lines_of_sets_element_can_be))
-
+def get_max_weight_possible_of(sets_elements_can_be, elements_weight, A_T, capacidades):
     max_weights = []
-    #print("Pesos atuais: {}".format(elements_weight))
     for i in range(sets_elements_can_be.shape[0]):
         if sets_elements_can_be[i] == 1:
-            #print("Linha vista atual: {}".format(A_T[i]))
-            #print("Capacidade total: {}".format(capacidades[i]))
             max_weight_in_line = int(capacidades[i] - (elements_weight.T @ A_T[i]))
             max_weights.append(max_weight_in_line)
     max_weight = min(max_weights)
-    print("Max weight: {}".format(max_weight))
-
     return max_weight
 
+
+def find_new_set(sets_elements_can_be, A_T, elements_weight, capacidades, selected_sets):
+    for i in range(sets_elements_can_be.shape[0]):
+        if sets_elements_can_be[i] == 1:
+            line = A_T[i]
+            sum = line @ elements_weight
+            if sum == capacidades[i] and selected_sets[i] == 0:
+                return i
+    return -1
+
+def define_new_elements_covered_by_set(set_elements, already_covered_elements):
+    return np.array([1 if set_elements[i] == 1 or already_covered_elements[i] == 1 else 0 for i in range(set_elements.shape[0])])
 
 def main():
     capacidades,matriz_incidencia=leEntrada()
@@ -59,9 +61,16 @@ def main():
         index_elem_not_covered = get_not_covered_element_index(already_covered_elements)
         if element_is_not_covered(index_elem_not_covered):
             print("Elemento fora de qualquer conjunto: {}".format(index_elem_not_covered))
-            element_max_weight = get_max_weight_possible_of(index_elem_not_covered, elements_weight, A_T, capacidades)
+            sets_elements_can_be = A_T[:,index_elem_not_covered]
+            lines_of_sets_element_can_be = np.array([A_T[i] for i in range(A_T.shape[0]) if sets_elements_can_be[i] == 1])
+            element_max_weight = get_max_weight_possible_of(sets_elements_can_be, elements_weight, A_T, capacidades)
             elements_weight[index_elem_not_covered] = element_max_weight
             print("Pesos atuais: {}".format(elements_weight))
+            new_set_found_index = find_new_set(sets_elements_can_be, A_T, elements_weight, capacidades, selected_sets)
+            if new_set_found_index != -1:
+                set_elements = A_T[new_set_found_index]
+                already_covered_elements = define_new_elements_covered_by_set(set_elements, already_covered_elements)
+                print(already_covered_elements)
             break
         else:
             break
